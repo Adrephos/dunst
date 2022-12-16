@@ -342,6 +342,13 @@ void queues_notification_close(struct notification *n, enum reason reason)
 }
 
 /* see queues.h */
+void queues_history_clear(void)
+{
+        g_queue_foreach(history, (GFunc)notification_unref, NULL);
+        g_queue_clear(history);
+}
+
+/* see queues.h */
 void queues_history_pop(void)
 {
         if (g_queue_is_empty(history))
@@ -406,6 +413,29 @@ void queues_history_push_all(void)
         while (waiting->length > 0) {
                 queues_notification_close(g_queue_peek_head_link(waiting)->data, REASON_USER);
         }
+}
+
+/* see queues.h */
+void queues_history_remove_by_id(unsigned int id) {
+        struct notification *n = NULL;
+
+        if (g_queue_is_empty(history))
+                return;
+
+        for (GList *iter = g_queue_peek_head_link(history); iter;
+                iter = iter->next) {
+                struct notification *cur = iter->data;
+                if (cur->id == id) {
+                        n = cur;
+                        break;
+                }
+        }
+
+        if (n == NULL)
+                return;
+
+        g_queue_remove(history, n);
+        notification_unref(n);
 }
 
 /* see queues.h */
